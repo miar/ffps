@@ -9,7 +9,7 @@ TEST = MultiThreadBenchRunner
 MultiThreadBenchRunnerAll:
 	make GetUpdatedFFP
 	$(JDK_PATH)/$(JDK)/javac *.java
-#       $(JDK_PATH)/$(JDK)/java  -server $(TEST) generateNewDataset  CHM     CSLM    CT       FFPO   FFPS    > tmp/map_results
+#       $(JDK_PATH)/$(JDK)/java  -server $(TEST) generateNewDataset  CHM     CSLM     CT      FFPO   FFPS   > tmp/map_results
 	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "true"        "true"  "false" "false" "false" "false" > tmp/CHM
 	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "true"  "false" "false" "false" > tmp/CSLM
 	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "true"  "false" "false" > tmp/CT

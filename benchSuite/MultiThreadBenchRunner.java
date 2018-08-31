@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 
-
 public class MultiThreadBenchRunner {
 
     private final static int [] THREADS = {1, 8, 16, 24, 32}; 

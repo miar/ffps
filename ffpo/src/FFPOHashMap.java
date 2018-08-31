@@ -26,7 +26,6 @@ public class FFPOHashMap <E, V>  {
     private static final int base; 
     private static final int scale; 
     private static final long next_addr;
-
     private Object [] HN;
 
 

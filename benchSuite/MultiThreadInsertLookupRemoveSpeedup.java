@@ -34,6 +34,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 
     public MultiThreadInsertLookupRemoveSpeedup (int threads[], int r, 
 						 int  w, int d) {
+
 	THREADS = threads;
 	RUNS = r;
 	WARMUP_RUNS = w;

@@ -24,6 +24,7 @@ public class FFPSHashMap<E, V>  {
     private long total_memory_jumps_in_hash_levels;
     private long total_memory_jumps_in_chain_nodes;
     private long partial_max_value;   // used to check the correctness of the ordered hash map
+
     /****************************************************************************
      *                           configuration                                  *
      ****************************************************************************/
@@ -39,7 +40,6 @@ public class FFPSHashMap<E, V>  {
     private static final long next_addr;
     private static final long HN_addr;
     private static final long prev_hash_addr;
-
     private LFHT_AtomicReferenceArray HN;
 
     static {
