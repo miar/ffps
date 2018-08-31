@@ -354,7 +354,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *                             FFPO Hash Map                                     *
      *********************************************************************************/
     private void ffpo(int hashSize) throws InterruptedException {
-	System.out.println("Maps : FFPO" + (1 << hashSize));
+	System.out.println("Maps : FFPO - " + (1 << hashSize));
 
 	for (final int T : THREADS) {	
 	    long averageTime = 0;
@@ -454,7 +454,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *                             FFPS Hash Map                                     *
      *********************************************************************************/
     private void ffps(int hashSize) throws InterruptedException {
-	System.out.println("Maps : FFPS" + (1 << hashSize));
+	System.out.println("Maps : FFPS - " + (1 << hashSize));
 
 	for (final int T : THREADS) {	
 	    long averageTime = 0;

@@ -4,9 +4,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 
 @SuppressWarnings({"unchecked", "rawtypes", "unused"})
 
@@ -968,8 +965,7 @@ public class FFPSHashMap<E, V>  {
     private void flush_bucket_chain2(LFHT_AtomicReferenceArray curr_hash,
                                      Object chain_node,
                                      int level,
-                                     boolean flush_nodes,
-                                     Map check_lfht,
+                                     boolean flush_nodes,                                    
                                      int white_spaces) {
 
         ArrayList<LFHT_AnsNode> chain_of_nodes = new ArrayList<LFHT_AnsNode>();
@@ -978,11 +974,7 @@ public class FFPSHashMap<E, V>  {
             total_memory_jumps++;
             total_memory_jumps_in_chain_nodes++;
             if (IS_VALID_ENTRY(LFHT_AnsNode.class.cast(chain_node))) {
-                if (check_lfht.get(LFHT_AnsNode.class.cast(chain_node).entry) == null) {
-                    check_lfht.put(LFHT_AnsNode.class.cast(chain_node).entry, LFHT_AnsNode.class.cast(chain_node).entry);
-                    chain_of_nodes.add(LFHT_AnsNode.class.cast(chain_node));
-                    total_nodes_valid++;
-                }
+                    total_nodes_valid++;                
             } else
                 total_nodes_invalid++;
             chain_node = LFHT_AnsNode.class.cast(chain_node).getNext();
@@ -1024,7 +1016,7 @@ public class FFPSHashMap<E, V>  {
 
     private void flush_bucket_array2(LFHT_AtomicReferenceArray curr_hash,
                                     int level,
-                                    boolean flush_nodes, Map<Long, Long>  check_lfht,
+                                    boolean flush_nodes,
                                     int white_spaces) {
         total_memory_jumps++;
         total_memory_jumps_in_hash_levels++;
@@ -1043,9 +1035,9 @@ public class FFPSHashMap<E, V>  {
                 Object bucket_next = curr_hash.hash[bucket_entry];
                 if (IS_HASH(bucket_next)) {
                     flush_bucket_array2((LFHT_AtomicReferenceArray) bucket_next,
-                            level + 1, flush_nodes, check_lfht, white_spaces + 3);
+                            level + 1, flush_nodes, white_spaces + 3);
                 } else {
-                    flush_bucket_chain2(curr_hash, bucket_next, level, flush_nodes, check_lfht, white_spaces + 3);
+                    flush_bucket_chain2(curr_hash, bucket_next, level, flush_nodes, white_spaces + 3);
     		    /* leaf bucket_array */
                     if (level > total_max_hash_trie_depth)
                         total_max_hash_trie_depth = level;
@@ -1089,12 +1081,9 @@ public class FFPSHashMap<E, V>  {
         total_max_nodes = 0;
         total_min_nodes =  Long.MAX_VALUE;
 
-        // ready to be used with compaction
-        Map<Long, Long> check_lfth = new ConcurrentHashMap<Long, Long>();
-
         int white_spaces = 1;
 
-        flush_bucket_array2(HN, 0, flush_nodes, check_lfth, white_spaces);
+        flush_bucket_array2(HN, 0, flush_nodes, white_spaces);
 
         if (total_min_nodes ==  Long.MAX_VALUE)
             total_min_nodes = 0;
@@ -1165,9 +1154,7 @@ public class FFPSHashMap<E, V>  {
         total_nodes_invalid = 0;
 
 
-        Map<Long, Long> check_lfht = new ConcurrentHashMap<Long, Long>();
-
-        flush_bucket_array2(HN, 0, false, check_lfht, 1);
+        flush_bucket_array2(HN, 0, false, 1);
         if (total_nodes_invalid != 0) {
             System.out.println("ERROR INVALID NODES VISIBLE -> " + total_nodes_invalid);
             System.exit(0);
