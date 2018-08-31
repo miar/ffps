@@ -7,20 +7,20 @@ JDK = jdk-10.0.1/bin
 TEST = MultiThreadBenchRunner
 
 MultiThreadBenchRunnerAll:
-	make GetUpdatedFFP
+	make GetUpdatedFFPO
 	$(JDK_PATH)/$(JDK)/javac *.java
 #       $(JDK_PATH)/$(JDK)/java  -server $(TEST) generateNewDataset  CHM     CSLM    NBHM     CT     FFP    > tmp/map_results
 #       $(JDK_PATH)/$(JDK)/java  -server $(TEST) generateNewDataset  CHM     CSLM    CT       FFPO   FFPS    > tmp/map_results
 	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "true"        "true"  "false" "false" "false" "false" > tmp/CHM
 	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "true"  "false" "false" "false" > tmp/CSLM
-	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "true"  "false" "false" > tmp/NBHM
-	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "false" "true"  "false" > tmp/CT
-	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "false" "false" "true"  > tmp/FFP
+	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "true"  "false" "false" > tmp/CT
+	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "false" "true"  "false" > tmp/FFPO
+	$(JDK_PATH)/$(JDK)/java  -server $(TEST)      "false"       "false" "false" "false" "false" "true"  > tmp/FFPS
 	make clean
 
-GetUpdatedFFP:
-	cp ../ffp/src/* ffp/
-	cd ffp ; $(JDK_PATH)/$(JDK)/javac -XDignore.symbol.file *.java	
+GetUpdatedFFPO:
+	cp ../ffpo/src/* ffpo/
+	cd ffpo ; $(JDK_PATH)/$(JDK)/javac -XDignore.symbol.file *.java	
 
 clean: 
 	rm *.class

@@ -2,7 +2,7 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
-import ffp.*;
+import ffpo.*;
 import com.romix.scala.collection.concurrent.TrieMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +28,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
     public Map<Long, Long> CHM = null;
     public ConcurrentSkipListMap <Long, Long> CSLM = null;
     public Map<Long, Long> CT = null;
-    public FFPHashMap <Long, Long> FFP = null;
+    public FFPOHashMap <Long, Long> FFPO = null;
 
     public MultiThreadInsertLookupRemoveSpeedup (int threads[], int r, 
 						 int  w, int d) {
@@ -349,24 +349,24 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 
 
     /*********************************************************************************
-     *                             FFP Hash Map                                      *
+     *                             FFPO Hash Map                                     *
      *********************************************************************************/
-    private void ffp(int hashSize) throws InterruptedException {
-	System.out.println("Maps : FFP" + (1 << hashSize));
+    private void ffpo(int hashSize) throws InterruptedException {
+	System.out.println("Maps : FFPO" + (1 << hashSize));
 
 	for (final int T : THREADS) {	
 	    long averageTime = 0;
 	    long averageMemory = 0;
 	    final int thread_dataset_offset = DATASET_SIZE / T;
 	    for (int r = 1; r <= TOTAL_RUNS; r++) {		
-		FFP = new FFPHashMap<Long, Long>(hashSize);
+		FFPO = new FFPOHashMap<Long, Long>(hashSize);
 		/* save a part of the dataset to the remove operation
 		   items in this part are all different from the remaining items
 		   in the dataset */
 		for (int i = LAST_INSERT_I; i < LAST_LOOKUP_FOUND_I; i++) 
-		    FFP.put(DATASET[i], DATASET[i]);
+		    FFPO.put(DATASET[i], DATASET[i]);
 		for (int i = LAST_LOOKUP_NFOUND_I; i < DATASET_SIZE; i++) 
-		    FFP.put(DATASET[i], DATASET[i]);
+		    FFPO.put(DATASET[i], DATASET[i]);
 		Thread threads[] = new Thread[T];
 		for (int t = 0; t < T; t++) {
 		    final int tid = t;
@@ -386,31 +386,31 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 				int i = thread_initial_i;
 				if (thread_initial_i < LAST_INSERT_I) { 
 				    for (;i < LAST_INSERT_I; i = i + T) 
-					FFP.put(DATASET[i], DATASET[i]);		    
+					FFPO.put(DATASET[i], DATASET[i]);		    
 				    for (; i < LAST_LOOKUP_I; i = i + T)
-					FFP.get(DATASET[i]);				    
+					FFPO.get(DATASET[i]);				    
 				    for (; i < DATASET_SIZE; i = i + T) 
-					FFP.remove(DATASET[i]);				    
+					FFPO.remove(DATASET[i]);				    
 				    for (i = tid; i < thread_initial_i; i = i + T) 
-					FFP.put(DATASET[i], DATASET[i]);
+					FFPO.put(DATASET[i], DATASET[i]);
 				} else if (thread_initial_i < LAST_LOOKUP_I) { 
 				    for (; i < LAST_LOOKUP_I; i = i + T)
-					FFP.get(DATASET[i]);			    
+					FFPO.get(DATASET[i]);			    
 				    for (; i < DATASET_SIZE; i = i + T) 
-					FFP.remove(DATASET[i]);				    
+					FFPO.remove(DATASET[i]);				    
 				    for (i = tid; i < LAST_INSERT_I; i = i + T) 
-					FFP.put(DATASET[i], DATASET[i]);	    
+					FFPO.put(DATASET[i], DATASET[i]);	    
 				    for (; i < thread_initial_i; i = i + T)
-					FFP.get(DATASET[i]);
+					FFPO.get(DATASET[i]);
 				} else {
 				    for (; i < DATASET_SIZE; i = i + T) 
-					FFP.remove(DATASET[i]);
+					FFPO.remove(DATASET[i]);
 				    for (i = tid; i < LAST_INSERT_I; i = i + T) 
-					FFP.put(DATASET[i], DATASET[i]); 		    
+					FFPO.put(DATASET[i], DATASET[i]); 		    
 				    for (; i < LAST_LOOKUP_I; i = i + T)
-					FFP.get(DATASET[i]);				    
+					FFPO.get(DATASET[i]);				    
 				    for (; i < thread_initial_i; i = i + T) 
-					FFP.remove(DATASET[i]);
+					FFPO.remove(DATASET[i]);
 				}				
 			    }
 			});
@@ -431,13 +431,13 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 			             Runtime.getRuntime().freeMemory();
 		}		    
 
-		//if(MAP_SIZE != FFP.size()) {
-		// System.out.println("ERROR IN MAP SIZE -> "+ MAP_SIZE + " " + FFP.size());
+		//if(MAP_SIZE != FFPO.size()) {
+		// System.out.println("ERROR IN MAP SIZE -> "+ MAP_SIZE + " " + FFPO.size());
 		   //System.exit(0);
 		//}
-		//FFP.flush_hash_statistics(false);
+		//FFPO.flush_hash_statistics(false);
 
-		FFP = null;
+		FFPO = null;
 	    }
 	    
 	    System.out.println("Threads = " + T + " Time = " + 
@@ -462,10 +462,9 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 	    cslm();
 	if (ct)
 	    ct();
-	if (ffpo) {
-	    ffp(3);  // ffp8
-	    ffp(5);  // ffp32
-	}
+	if (ffpo)
+	    ffpo(4);
+	
 	return;
     }
 }

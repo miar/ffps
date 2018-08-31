@@ -1,10 +1,10 @@
-package ffp;
+package ffpo;
 
 import java.lang.reflect.Field;
 import sun.misc.Unsafe;
 
 @SuppressWarnings({"unchecked", "rawtypes", "unused"})
-public class FFPHashMap <E, V>  { 
+public class FFPOHashMap <E, V>  { 
  
     /****************************************************************************
      *                           statistics                                     *
@@ -18,7 +18,7 @@ public class FFPHashMap <E, V>  {
     private long total_max_nodes;
     private long total_min_nodes;
 
-    private final int MAX_NODES_PER_BUCKET = 6;
+    private final int MAX_NODES_PER_BUCKET = 3;
     private int SHIFT_SIZE;
     private int BASE_HASH_BUCKETS;
         
@@ -47,7 +47,7 @@ public class FFPHashMap <E, V>  {
 
 	try {
             next_addr = unsafe.objectFieldOffset
-                (FFPAnsNode.class.getDeclaredField("next"));
+                (FFPOAnsNode.class.getDeclaredField("next"));
         } catch (ReflectiveOperationException e) {
             throw new Error(e);
         }
@@ -55,13 +55,13 @@ public class FFPHashMap <E, V>  {
 	base = unsafe.arrayBaseOffset(Object[].class);
 	scale  = unsafe.arrayIndexScale(Object[].class); 	
     }      
-    public FFPHashMap (){
+    public FFPOHashMap (){
 	SHIFT_SIZE = 5;
 	BASE_HASH_BUCKETS = 1 << SHIFT_SIZE;
 	HN = newAtomicReferenceHash(null);
     }
 
-    public FFPHashMap (int shiftSize) {
+    public FFPOHashMap (int shiftSize) {
 	SHIFT_SIZE = shiftSize;
 	BASE_HASH_BUCKETS = 1 << SHIFT_SIZE;
 	HN = newAtomicReferenceHash(null);
@@ -72,11 +72,11 @@ public class FFPHashMap <E, V>  {
      *                           private auxiliary methods                     *
      ***************************************************************************/
     
-    private boolean IS_EQUAL_ENTRY(FFPAnsNode <E,V> node, int h, E t) {
+    private boolean IS_EQUAL_ENTRY(FFPOAnsNode <E,V> node, int h, E t) {
 	return node.equals(h, t);
     }
 
-    private boolean IS_VALID_ENTRY(FFPAnsNode <E,V> node) {
+    private boolean IS_VALID_ENTRY(FFPOAnsNode <E,V> node) {
 	return node.valid();
     }
     
@@ -89,7 +89,7 @@ public class FFPHashMap <E, V>  {
 	return curr_hash[bucket_pos] == curr_hash;
     }
     
-    private boolean WAS_MARKED_AS_INVALID_NOW(FFPAnsNode <E,V> node) {
+    private boolean WAS_MARKED_AS_INVALID_NOW(FFPOAnsNode <E,V> node) {
 	return node.markAsInvalid();
     }
 
@@ -104,10 +104,10 @@ public class FFPHashMap <E, V>  {
      ****************************************************************************/
 
     private void insert_bucket_chain(Object[] curr_hash, 
-				     FFPAnsNode <E,V> chain_node, 
+				     FFPOAnsNode <E,V> chain_node, 
 				     Object insert_point_candidate,
 				     Object insert_point_candidate_next,
-				     FFPAnsNode <E,V> adjust_node, 
+				     FFPOAnsNode <E,V> adjust_node, 
 				     int n_shifts, 
 				     int count_nodes) {
 
@@ -126,7 +126,7 @@ public class FFPHashMap <E, V>  {
 	    chain_next = chain_node.getNext();
 
 	if (!IS_HASH(chain_next)) {
-	    insert_bucket_chain(curr_hash, (FFPAnsNode <E,V>) chain_next, 
+	    insert_bucket_chain(curr_hash, (FFPOAnsNode <E,V>) chain_next, 
 				ipc, ipc_next, adjust_node, n_shifts, cn);
 	    return;
 	}
@@ -134,7 +134,7 @@ public class FFPHashMap <E, V>  {
 	if ((Object[]) chain_next == curr_hash) {
 	    if(cn == MAX_NODES_PER_BUCKET) {
 		Object[] new_hash = newAtomicReferenceHash(curr_hash);		
-		if (FFPAnsNode.class.cast(ipc).
+		if (FFPOAnsNode.class.cast(ipc).
 		                 compareAndSetNext(ipc_next, new_hash)) {
 		    int bucket = HASH_ENTRY(h, n_shifts);
 		    adjust_chain_nodes(new_hash, curr_hash[bucket], n_shifts);  
@@ -184,17 +184,17 @@ public class FFPHashMap <E, V>  {
 		return;
 	    } else {
 		/* ipc is a node */
-		chain_next = FFPAnsNode.class.cast(ipc).getNext();
+		chain_next = FFPOAnsNode.class.cast(ipc).getNext();
 		if (chain_next == ipc_next) {
 		    adjust_node.forceCompareAndSetNext(curr_hash);
-		    if (FFPAnsNode.class.cast(ipc).
+		    if (FFPOAnsNode.class.cast(ipc).
 			compareAndSetNext(ipc_next, adjust_node)) {
 			if (!IS_VALID_ENTRY(adjust_node))
 			    /* same as comment in 1) */
 			    delete_bucket_chain(curr_hash, adjust_node, n_shifts);    
 			return;
 		    }
-		    chain_next = FFPAnsNode.class.cast(ipc).getNext();		
+		    chain_next = FFPOAnsNode.class.cast(ipc).getNext();		
 		}
 
 		/* recover to a hash */
@@ -215,7 +215,7 @@ public class FFPHashMap <E, V>  {
     
 
     private void insert_bucket_array(Object [] curr_hash, 
-				     FFPAnsNode <E,V> chain_node, 
+				     FFPOAnsNode <E,V> chain_node, 
 				     int n_shifts) {	
 	
 	chain_node.forceCompareAndSetNext(curr_hash);
@@ -242,8 +242,8 @@ public class FFPHashMap <E, V>  {
 	    insert_bucket_array((Object []) bucket_next, chain_node, ns);
 	    return;
 	} else {
-            insert_bucket_chain(curr_hash, (FFPAnsNode<E,V>) bucket_next,
-				curr_hash, (FFPAnsNode<E,V>) bucket_next,
+            insert_bucket_chain(curr_hash, (FFPOAnsNode<E,V>) bucket_next,
+				curr_hash, (FFPOAnsNode<E,V>) bucket_next,
 				chain_node, n_shifts, 0);
 	    return;
 	}
@@ -261,14 +261,14 @@ public class FFPHashMap <E, V>  {
    
         if(chain_curr == (Object) new_hash)
             return;
-        adjust_chain_nodes(new_hash, FFPAnsNode.class.cast(chain_curr).getNext(), 
+        adjust_chain_nodes(new_hash, FFPOAnsNode.class.cast(chain_curr).getNext(), 
 			   n_shifts);
-	insert_bucket_array(new_hash, FFPAnsNode.class.cast(chain_curr), n_shifts + 1);
+	insert_bucket_array(new_hash, FFPOAnsNode.class.cast(chain_curr), n_shifts + 1);
 	return;
     }
 
-    private FFPAnsNode <E,V> check_insert_bucket_chain(Object [] curr_hash,
-							 FFPAnsNode<E,V> chain_node, 
+    private FFPOAnsNode <E,V> check_insert_bucket_chain(Object [] curr_hash,
+							 FFPOAnsNode<E,V> chain_node, 
 							 Object insert_point_candidate,
 							 Object insert_point_candidate_next,
 							 int h,
@@ -293,7 +293,7 @@ public class FFPHashMap <E, V>  {
 	}
 
         if (!IS_HASH(chain_next)) {
-            return check_insert_bucket_chain(curr_hash, (FFPAnsNode<E,V>) chain_next,
+            return check_insert_bucket_chain(curr_hash, (FFPOAnsNode<E,V>) chain_next,
 					     ipc, ipc_next, h, t, v, n_shifts, cn);
 	}
 	    
@@ -301,7 +301,7 @@ public class FFPHashMap <E, V>  {
             if(cn == MAX_NODES_PER_BUCKET) {
                 Object [] new_hash =  newAtomicReferenceHash(curr_hash);
 		/* ipc == chain_node (later you can do an assert of this where) */
-                if (FFPAnsNode.class.cast(ipc).
+                if (FFPOAnsNode.class.cast(ipc).
    		                 compareAndSetNext(ipc_next, new_hash)) {		    
 		    int bucket = HASH_ENTRY(h, n_shifts);
                     adjust_chain_nodes(new_hash, curr_hash[bucket], n_shifts);
@@ -315,8 +315,8 @@ public class FFPHashMap <E, V>  {
 		int bucket = HASH_ENTRY(h, n_shifts);
 		chain_next = curr_hash[bucket]; 
 		if (chain_next == ipc_next) {
-		    FFPAnsNode <E,V> new_node = 
-			new FFPAnsNode <E,V> (h, t, v, curr_hash);
+		    FFPOAnsNode <E,V> new_node = 
+			new FFPOAnsNode <E,V> (h, t, v, curr_hash);
 		    if (compareAndSet(curr_hash, bucket, ipc_next, new_node))
 			return new_node;
 		    chain_next = curr_hash[bucket]; 
@@ -333,15 +333,15 @@ public class FFPHashMap <E, V>  {
 						 h, t, v, n_shifts);
 	    } else {
 		/* ipc is a node */
-		chain_next = FFPAnsNode.class.cast(ipc).getNext();
+		chain_next = FFPOAnsNode.class.cast(ipc).getNext();
 		if (chain_next == ipc_next) {
-		    FFPAnsNode <E,V> new_node = new 
-			FFPAnsNode <E,V> (h, t, v, curr_hash);
+		    FFPOAnsNode <E,V> new_node = new 
+			FFPOAnsNode <E,V> (h, t, v, curr_hash);
 
-		    if (FFPAnsNode.class.cast(ipc).
+		    if (FFPOAnsNode.class.cast(ipc).
 			compareAndSetNext(ipc_next, new_node))
 			return new_node;
-		    chain_next = FFPAnsNode.class.cast(ipc).getNext();		
+		    chain_next = FFPOAnsNode.class.cast(ipc).getNext();		
 		}
 		
 		/* recover always to a hash */
@@ -359,7 +359,7 @@ public class FFPHashMap <E, V>  {
 	return null;
     }
 
-    private FFPAnsNode<E,V> check_insert_bucket_array(Object [] curr_hash, 
+    private FFPOAnsNode<E,V> check_insert_bucket_array(Object [] curr_hash, 
 							int h, 
 							E t, 
 							V v, 
@@ -367,8 +367,8 @@ public class FFPHashMap <E, V>  {
         int bucket;
         bucket = HASH_ENTRY(h, n_shifts);
         if (IS_EMPTY_BUCKET(curr_hash, bucket)) {
-		FFPAnsNode <E,V> new_node = new 
-		    FFPAnsNode <E,V> (h, t, v, curr_hash);
+		FFPOAnsNode <E,V> new_node = new 
+		    FFPOAnsNode <E,V> (h, t, v, curr_hash);
 		if (compareAndSet(curr_hash, bucket, curr_hash, new_node)) {
 		    return new_node;
 		}
@@ -382,9 +382,9 @@ public class FFPHashMap <E, V>  {
 					     h, t, v, ns);
         } else
             return check_insert_bucket_chain(curr_hash, 
-					     (FFPAnsNode<E,V>) bucket_next,
+					     (FFPOAnsNode<E,V>) bucket_next,
 					     curr_hash, 
-					     (FFPAnsNode<E,V>) bucket_next,
+					     (FFPOAnsNode<E,V>) bucket_next,
 					     h, t, v, n_shifts, 0);           
     }
     
@@ -393,7 +393,7 @@ public class FFPHashMap <E, V>  {
      ****************************************************************************/
     
 
-    private FFPAnsNode<E,V> check_bucket_array(Object [] curr_hash, 
+    private FFPOAnsNode<E,V> check_bucket_array(Object [] curr_hash, 
 						 int h, 
 						 E t,
 						 int n_shifts) {
@@ -411,16 +411,16 @@ public class FFPHashMap <E, V>  {
 		curr_hash = (Object[]) bucket_next;		
             } else
 		return check_bucket_chain(curr_hash, 
-					  (FFPAnsNode<E,V>) bucket_next,
+					  (FFPOAnsNode<E,V>) bucket_next,
 					  curr_hash, 
-					  (FFPAnsNode<E,V>) bucket_next,
+					  (FFPOAnsNode<E,V>) bucket_next,
 					  h, t, ns);	    
         } while(true);
     }
 
     
-    private FFPAnsNode <E,V> check_bucket_chain(Object [] curr_hash, 
-    					    FFPAnsNode <E,V> chain_node, 
+    private FFPOAnsNode <E,V> check_bucket_chain(Object [] curr_hash, 
+    					    FFPOAnsNode <E,V> chain_node, 
     					    Object insert_point_candidate,
     					    Object insert_point_candidate_next,
                                             int h, 
@@ -440,7 +440,7 @@ public class FFPHashMap <E, V>  {
     	    chain_next = chain_node.getNext();
 
     	if (!IS_HASH(chain_next))
-            return check_bucket_chain(curr_hash, (FFPAnsNode<E,V>) chain_next, 
+            return check_bucket_chain(curr_hash, (FFPOAnsNode<E,V>) chain_next, 
     				      ipc, ipc_next, h, t, n_shifts);
         
     	if ((Object []) chain_next == curr_hash) {
@@ -464,7 +464,7 @@ public class FFPHashMap <E, V>  {
 					  h, t, n_shifts);
 	    } else {
 		/* ipc is a node */
-		chain_next = FFPAnsNode.class.cast(ipc).getNext();
+		chain_next = FFPOAnsNode.class.cast(ipc).getNext();
 		if (chain_next == ipc_next) 
 		    return null;
 
@@ -488,7 +488,7 @@ public class FFPHashMap <E, V>  {
      *                           check (search) delete operation                *
      ****************************************************************************/
 
-    private FFPAnsNode<E,V> check_delete_bucket_array(Object [] curr_hash, 
+    private FFPOAnsNode<E,V> check_delete_bucket_array(Object [] curr_hash, 
 							int h,
 							E t,
 							int n_shifts) {
@@ -505,14 +505,14 @@ public class FFPHashMap <E, V>  {
     					     h, t, ns);
 	} else
             return check_delete_bucket_chain(curr_hash, 
-					     (FFPAnsNode<E,V>) bucket_next, 
+					     (FFPOAnsNode<E,V>) bucket_next, 
     					     curr_hash, 
-					     (FFPAnsNode<E,V>) bucket_next,
+					     (FFPOAnsNode<E,V>) bucket_next,
     					     h, t, n_shifts);
     }
 
-    private FFPAnsNode<E,V> check_delete_bucket_chain(Object [] curr_hash, 
-    						   FFPAnsNode<E,V> chain_node, 
+    private FFPOAnsNode<E,V> check_delete_bucket_chain(Object [] curr_hash, 
+    						   FFPOAnsNode<E,V> chain_node, 
     						   Object insert_point_candidate,
     						   Object insert_point_candidate_next,
                                                    int h, 
@@ -538,7 +538,7 @@ public class FFPHashMap <E, V>  {
 
     	if (!IS_HASH(chain_next)) {
             return check_delete_bucket_chain(curr_hash, 
-					     (FFPAnsNode<E,V>) chain_next, 
+					     (FFPOAnsNode<E,V>) chain_next, 
     					     ipc, ipc_next, h, t, n_shifts);
 	}
         
@@ -561,7 +561,7 @@ public class FFPHashMap <E, V>  {
 						 h, t, n_shifts);		
 	    } else {
 		/* ipc is a node */
-		chain_next = FFPAnsNode.class.cast(ipc).getNext();
+		chain_next = FFPOAnsNode.class.cast(ipc).getNext();
 		if (chain_next == ipc_next) 
 		    return null;
 		
@@ -579,17 +579,17 @@ public class FFPHashMap <E, V>  {
 	return null;
     }     
 
-    private FFPAnsNode<E,V> delete_bucket_chain(Object [] curr_hash, 
-						  FFPAnsNode chain_node, 
+    private FFPOAnsNode<E,V> delete_bucket_chain(Object [] curr_hash, 
+						  FFPOAnsNode chain_node, 
 						  int n_shifts) {
     	do {
     	    Object chain_next_valid_candidate;
     	    Object chain_curr = (Object) chain_node;
     	    /* get chain_next_valid - (begin) */  
     	    do
-    		chain_curr = FFPAnsNode.class.cast(chain_curr).getNext();
+    		chain_curr = FFPOAnsNode.class.cast(chain_curr).getNext();
     	    while (!IS_HASH(chain_curr) && 
-		   !FFPAnsNode.class.cast(chain_curr).valid());
+		   !FFPOAnsNode.class.cast(chain_curr).valid());
 	    
     	    if (IS_HASH(chain_curr) && ((Object [])chain_curr != curr_hash)) {
     		/* re-positioning the thread in next hash level. The
@@ -606,7 +606,7 @@ public class FFPHashMap <E, V>  {
     	    chain_next_valid_candidate = chain_curr;
     	    if (!IS_HASH(chain_curr))
     		do 
-    		    chain_curr = FFPAnsNode.class.cast(chain_curr).getNext();
+    		    chain_curr = FFPOAnsNode.class.cast(chain_curr).getNext();
     		while (!IS_HASH(chain_curr));	    
     	    if (chain_curr != curr_hash) {
     		/* re-positioning the thread in next hash level.  the
@@ -624,14 +624,14 @@ public class FFPHashMap <E, V>  {
     	    Object chain_prev_valid_candidate_next = chain_curr;
 
     	    while (!IS_HASH(chain_curr) && 
-    		   FFPAnsNode.class.cast(chain_curr) != chain_node) {
+    		   FFPOAnsNode.class.cast(chain_curr) != chain_node) {
 		
-    		if (FFPAnsNode.class.cast(chain_curr).valid()) {
+    		if (FFPOAnsNode.class.cast(chain_curr).valid()) {
     		    chain_prev_valid_candidate = chain_curr;
-		    chain_curr = FFPAnsNode.class.cast(chain_curr).getNext();
+		    chain_curr = FFPOAnsNode.class.cast(chain_curr).getNext();
     		    chain_prev_valid_candidate_next = chain_curr;
     		} else		    
-		    chain_curr = FFPAnsNode.class.cast(chain_curr).getNext();
+		    chain_curr = FFPOAnsNode.class.cast(chain_curr).getNext();
     	    }
 
     	    if (IS_HASH(chain_curr)) {
@@ -645,14 +645,14 @@ public class FFPHashMap <E, V>  {
 			return delete_bucket_chain(jump_hash, chain_node, (n_shifts + 1));
 		    return null;
 		}		    
-    	    } else /* FFPAnsNode.class.cast(chain_curr) == chain_node */ {
+    	    } else /* FFPOAnsNode.class.cast(chain_curr) == chain_node */ {
 		if (chain_prev_valid_candidate == curr_hash) {
     		    if (compareAndSet(curr_hash, bucket, 
 				      chain_prev_valid_candidate_next, 
 				      chain_next_valid_candidate)) {
     			/* update was ok */
 			if (!IS_HASH(chain_next_valid_candidate) && 
-			    !IS_VALID_ENTRY((FFPAnsNode)chain_next_valid_candidate))
+			    !IS_VALID_ENTRY((FFPOAnsNode)chain_next_valid_candidate))
 			    /* restart the process */
 			    continue;
     			return chain_node;
@@ -662,13 +662,13 @@ public class FFPHashMap <E, V>  {
     			continue;
     		    }
     		} else /* chain_prev_valid_candidate is node */ {
-    		    if (FFPAnsNode.class.cast(chain_prev_valid_candidate).
+    		    if (FFPOAnsNode.class.cast(chain_prev_valid_candidate).
     			compareAndSetNext(chain_prev_valid_candidate_next, 
     					  chain_next_valid_candidate)) {
     			/* update was ok */
 						
 			if (!IS_HASH(chain_next_valid_candidate) && 
-			    !IS_VALID_ENTRY((FFPAnsNode)chain_next_valid_candidate))
+			    !IS_VALID_ENTRY((FFPOAnsNode)chain_next_valid_candidate))
 			    /* restart the process */
 			    continue;
     			return chain_node; 
@@ -698,13 +698,13 @@ public class FFPHashMap <E, V>  {
     		total_min_nodes = count_nodes;
     	    return;
     	}
-    	if (IS_VALID_ENTRY(FFPAnsNode.class.cast(chain_node)))
+    	if (IS_VALID_ENTRY(FFPOAnsNode.class.cast(chain_node)))
     	    total_nodes_valid++;
     	else
     	    total_nodes_invalid++;
     	if (flush_nodes)
-    	    System.err.println(" " + FFPAnsNode.class.cast(chain_node).entry + " ");
-    	flush_bucket_chain(FFPAnsNode.class.cast(chain_node).getNext(), 
+    	    System.err.println(" " + FFPOAnsNode.class.cast(chain_node).entry + " ");
+    	flush_bucket_chain(FFPOAnsNode.class.cast(chain_node).getNext(), 
     			   count_nodes + 1, level, flush_nodes);
     	return;
     }
@@ -813,7 +813,7 @@ public class FFPHashMap <E, V>  {
     
     public V get(E t) {
 	int h = hash(t);
-	FFPAnsNode <E,V> node = check_bucket_array(HN, h, t, 0);
+	FFPOAnsNode <E,V> node = check_bucket_array(HN, h, t, 0);
 	if (node != null)
 	    return node.value;
 	return null;       
@@ -834,7 +834,7 @@ public class FFPHashMap <E, V>  {
     public V replace(E t, V v) {
 	/* it is not atomic for the moment */
 	int h = hash(t);
-	FFPAnsNode <E,V> node = check_bucket_array(HN, h, t, 0);
+	FFPOAnsNode <E,V> node = check_bucket_array(HN, h, t, 0);
 	if (node == null)
 	    return null;
 	V prev_value = node.value;
@@ -857,11 +857,11 @@ public class FFPHashMap <E, V>  {
 
 
     /****************************************************************************
-     *                         FFPAnsNode                                       *
+     *                         FFPOAnsNode                                       *
      ****************************************************************************/
 
     
-    static class FFPAnsNode <E, V> {
+    static class FFPOAnsNode <E, V> {
 
 	static class Pair {
 	    final Object reference;
@@ -877,7 +877,7 @@ public class FFPHashMap <E, V>  {
 	public V value;
 	private Pair next;
 	
-	public FFPAnsNode (int h, E e, V v, Object node_next) {
+	public FFPOAnsNode (int h, E e, V v, Object node_next) {
 	    this.hash = h;
 	    this.entry = e;
 	    this.value = v;
@@ -944,7 +944,7 @@ public class FFPHashMap <E, V>  {
     }
 
     /****************************************************************************
-     *                         FFPAtomicReferenceArray                          *
+     *                         FFPOAtomicReferenceArray                          *
      ****************************************************************************/
 
     private Object [] newAtomicReferenceHash(Object ph) {    	
