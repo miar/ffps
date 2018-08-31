@@ -19,7 +19,7 @@ public class FFPOHashMap <E, V>  {
     private long total_min_nodes;
 
     private final int MAX_NODES_PER_BUCKET = 3;
-    private int SHIFT_SIZE;
+    private int SHIFT_SIZE = 4;
     private int BASE_HASH_BUCKETS;
         
     private static final Unsafe unsafe;
@@ -56,7 +56,6 @@ public class FFPOHashMap <E, V>  {
 	scale  = unsafe.arrayIndexScale(Object[].class); 	
     }      
     public FFPOHashMap (){
-	SHIFT_SIZE = 5;
 	BASE_HASH_BUCKETS = 1 << SHIFT_SIZE;
 	HN = newAtomicReferenceHash(null);
     }
