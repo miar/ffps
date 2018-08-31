@@ -74,7 +74,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *                              Concurrent Hash Map                             *
      *********************************************************************************/
     private void chm() throws InterruptedException {
-	System.out.println("Maps : CHM ");
+	System.out.println("Map : CHM ");
 	for (final int T : THREADS) {	
 	    long averageTime = 0;
 	    long averageMemory = 0;
@@ -166,7 +166,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *                              Concurrent Skip Lists                            *
      *********************************************************************************/
     private void cslm() throws InterruptedException {
-	System.out.println("Maps : CSLM ");
+	System.out.println("Map : CSLM ");
 	for (final int T : THREADS) {	
 	    long averageTime = 0;	    
 	    long averageMemory = 0;
@@ -260,7 +260,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *********************************************************************************/
 
     private void ct() throws InterruptedException {
-	System.out.println("Maps : CT ");
+	System.out.println("Map : CT ");
 
 	for (final int T : THREADS) {	
 	    long averageTime = 0;
@@ -354,7 +354,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *                             FFPO Hash Map                                     *
      *********************************************************************************/
     private void ffpo(int hashSize) throws InterruptedException {
-	System.out.println("Maps : FFPO - " + (1 << hashSize));
+	System.out.println("Map : FFPO");
 
 	for (final int T : THREADS) {	
 	    long averageTime = 0;
@@ -454,7 +454,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
      *                             FFPS Hash Map                                     *
      *********************************************************************************/
     private void ffps(int hashSize) throws InterruptedException {
-	System.out.println("Maps : FFPS - " + (1 << hashSize));
+	System.out.println("Map : FFPS");
 
 	for (final int T : THREADS) {	
 	    long averageTime = 0;

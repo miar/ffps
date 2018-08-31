@@ -9,15 +9,13 @@ Linux using a terminal emulator:
 
 2. cd ffp/benchSuite/
 
-3. mkdir tmp
-
-4. Open the Makefile file, update JDK_PATH and JDK with your system
+3. Open the Makefile file, update JDK_PATH and JDK with your system
 values, close Makefile and do 'make' in the terminal
 
-5. Results with execution times and memory used by each model will
+4. Results with execution times and memory used by each model will
 appear in the 'tmp' directory
 
-6. If you want to see how our model is implemented check the 'ffpo' and
+5. If you want to see how our model is implemented check the 'ffpo' and
 'ffps' directories.
 
 Enjoy it.

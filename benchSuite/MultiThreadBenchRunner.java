@@ -12,17 +12,9 @@ import java.io.FileInputStream;
 
 public class MultiThreadBenchRunner {
 
-    /*
     private final static int [] THREADS = {1, 8, 16, 24, 32}; 
     private final static int RUNS = 20;
     private final static int WARMUP_RUNS = 5;
-
-    private final static int DATASET_SIZE =  1000000; 
-    */
-
-    private final static int [] THREADS = {1}; 
-    private final static int RUNS = 0;
-    private final static int WARMUP_RUNS = 0;
 
     private final static int DATASET_SIZE =  3000000; 
     
