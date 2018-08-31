@@ -23,7 +23,7 @@ public class FFPSHashMap<E, V>  {
     private long total_memory_jumps;
     private long total_memory_jumps_in_hash_levels;
     private long total_memory_jumps_in_chain_nodes;
-    private long partial_max_value;   // check correctness of the ordered hash map
+    private long partial_max_value;   // used to check the correctness of the ordered hash map
     /****************************************************************************
      *                           configuration                                  *
      ****************************************************************************/
@@ -32,7 +32,6 @@ public class FFPSHashMap<E, V>  {
 
     private static final int MAX_NODES_PER_BUCKET = 3;
     private static int N_BITS = 4;
-
 
     private static final Unsafe unsafe;
     private static final int base;
@@ -122,7 +121,7 @@ public class FFPSHashMap<E, V>  {
 
 	/* the key idea is to stop checking for keys in the ipc
 	   instead of the curr_hash. curr_hash is used only to
-	   understand which hasht the thread is using */
+	   understand which is the hash that thread is using */
 
 	    if (chain_node == adjust_node)
 	        // adjust_node is already in the correct hash level
@@ -161,7 +160,6 @@ public class FFPSHashMap<E, V>  {
                     int bucket = curr_hash.hashEntry(h);
                     chain_next = curr_hash.hash[bucket];
                     if (IS_HASH(chain_next) == false) {
-                        // is node
                         adjust_chain_nodes(new_hash, chain_next);
                         curr_hash.updateBucketToNextHash(bucket, new_hash);
                     }
@@ -186,8 +184,8 @@ public class FFPSHashMap<E, V>  {
                         adjust_chain_nodes(next_hash, chain_next);
                         curr_hash.updateBucketToNextHash(bucket, next_hash);
                     }
-                    /* thread hash to start from curr_hash, since its hash because might
-		       demand a next with a p_bit higher than next_hash */
+                    /* thread must start from curr_hash, since its hash might
+		       have a next with a p_bit higher than next_hash */
                     insert_bucket_array(curr_hash, adjust_node);
                     return;
                 }
@@ -462,9 +460,9 @@ public class FFPSHashMap<E, V>  {
                     chain_next = curr_hash.hash[bucket];
                 }
 
-		        /* recover always to a hash bucket array */
+		/* recover always to a hash bucket array */
                 if (!IS_HASH(chain_next) || (LFHT_AtomicReferenceArray) chain_next == curr_hash)
-		            // i'm in the curr_hash level
+		    // thread is in the curr_hash level
                     return check_insert_bucket_array(curr_hash, h, t, v);
 
             } else {
@@ -480,7 +478,7 @@ public class FFPSHashMap<E, V>  {
                     chain_next = LFHT_AnsNode.class.cast(ipc).getNext();
                 }
 
-		        /* recover always to a hash bucket array */
+		/* recover always to a hash bucket array */
                 if (!IS_HASH(chain_next) || (LFHT_AtomicReferenceArray) chain_next == curr_hash)
                     return check_insert_bucket_array(curr_hash, h, t, v);
 
@@ -514,14 +512,13 @@ public class FFPSHashMap<E, V>  {
             LFHT_AnsNode <E,V> new_node = new
                     LFHT_AnsNode <E,V> (h, t, v, curr_hash);
             if (curr_hash.compareAndSet(bucket, curr_hash, new_node)) {
-                //System.err.println("new_node " + t);
                 return new_node;
             }
         }
         Object bucket_next = curr_hash.hash[bucket];
         if (IS_HASH(bucket_next)) {
 	    /* with deletes a bucket entry might refer more than once to curr_hash */
-	        // ordered insertion (begin)
+	    // ordered insertion (begin)
             LFHT_AtomicReferenceArray next_hash = (LFHT_AtomicReferenceArray) bucket_next; // once hash, always hash
             int next_p_bits = next_position_bit(h, next_hash.hash_val);
             if (next_p_bits <= next_hash.p_bits) {
@@ -625,28 +622,28 @@ public class FFPSHashMap<E, V>  {
 
                 if (IS_HASH(chain_next))
                     if(chain_next != curr_hash)
-			        /* invariant */
+			/* invariant */
                         return check_bucket_array((LFHT_AtomicReferenceArray)
                                         chain_next, h, t);
 
                 return check_bucket_array(curr_hash, h, t);
             } else {
-		        /* ipc is a node */
+		/* ipc is a node */
                 chain_next = LFHT_AnsNode.class.cast(ipc).getNext();
                 if (chain_next == ipc_next)
                     return null;
-
-		        /* recover always to a hash bucket array */
+		
+		/* recover always to a hash bucket array */
                 if (!IS_HASH(chain_next) || (LFHT_AtomicReferenceArray) chain_next == curr_hash)
                     return check_bucket_array(curr_hash,
-                            h, t);
-		        /* recover with jump_hash */
+					      h, t);
+		/* recover with jump_hash */
             }
         }
 
     	/* avoid busy waiting */
         LFHT_AtomicReferenceArray jump_hash =
-                LFHT_AtomicReferenceArray.class.cast(chain_next).jumpToPreviousHash(curr_hash, h);
+	    LFHT_AtomicReferenceArray.class.cast(chain_next).jumpToPreviousHash(curr_hash, h);
 
         return check_bucket_array(jump_hash, h, t);
     }
@@ -710,42 +707,42 @@ public class FFPSHashMap<E, V>  {
 
         if ((LFHT_AtomicReferenceArray) chain_next == curr_hash) {
             if (ipc == curr_hash) {
-		        /* ipc is a hash */
+		/* ipc is a hash */
                 int bucket = curr_hash.hashEntry(h);
                 chain_next = curr_hash.hash[bucket];
                 if (chain_next == ipc_next)
                     return null;
-
-		        /* recover always to a hash bucket array */
+		
+		/* recover always to a hash bucket array */
                 if (IS_HASH(chain_next))
                     if(chain_next != curr_hash)
-			            /* invariant */
+			/* invariant */
                         return check_delete_bucket_array((LFHT_AtomicReferenceArray)
-                                        chain_next, h, t);
+							 chain_next, h, t);
                 return check_delete_bucket_array(curr_hash, h, t);
             } else {
-		        /* ipc is a node */
+		/* ipc is a node */
                 chain_next = LFHT_AnsNode.class.cast(ipc).getNext();
                 if (chain_next == ipc_next)
                     return null;
-
-        		/* recover always to a hash bucket array */
+		
+		/* recover always to a hash bucket array */
                 if (!IS_HASH(chain_next) || (LFHT_AtomicReferenceArray) chain_next == curr_hash)
                     return check_delete_bucket_array(curr_hash, h, t);
-
+		
             }
         }
         /* recover with jump_hash */
     	/* avoid busy waiting */
         LFHT_AtomicReferenceArray jump_hash =
-                LFHT_AtomicReferenceArray.class.cast(chain_next).jumpToPreviousHash(curr_hash, h);
-
+	    LFHT_AtomicReferenceArray.class.cast(chain_next).jumpToPreviousHash(curr_hash, h);
+	
         return check_delete_bucket_array(jump_hash, h, t);
     }
-
+    
     private LFHT_AnsNode<E,V> delete_bucket_chain(LFHT_AtomicReferenceArray curr_hash,
                                                   LFHT_AnsNode chain_node) {
-
+	
         do {
             Object chain_next_valid_candidate;
             Object chain_curr = (Object) chain_node;
@@ -753,15 +750,15 @@ public class FFPSHashMap<E, V>  {
             do
                 chain_curr = LFHT_AnsNode.class.cast(chain_curr).getNext();
             while (!IS_HASH(chain_curr) &&
-                    !LFHT_AnsNode.class.cast(chain_curr).valid());
-
+		   !LFHT_AnsNode.class.cast(chain_curr).valid());
+	    
             if (IS_HASH(chain_curr) && ((LFHT_AtomicReferenceArray)chain_curr != curr_hash)) {
     		/* re-positioning the thread in next hash level.  the
     		   pointer in the chain of curr_hash will be corrected
     		   by the adjust_chain_nodes procedure */
                 LFHT_AtomicReferenceArray jump_hash =
-                        LFHT_AtomicReferenceArray.class.cast(chain_curr).jumpToPreviousHash(curr_hash, chain_node.hash);
-
+		    LFHT_AtomicReferenceArray.class.cast(chain_curr).jumpToPreviousHash(curr_hash, chain_node.hash);
+		
                 return delete_bucket_chain(jump_hash, chain_node);
             }
     	    /* chain_curr is a valid node or the curr_hash */
@@ -770,17 +767,17 @@ public class FFPSHashMap<E, V>  {
                 do
                     chain_curr = LFHT_AnsNode.class.cast(chain_curr).getNext();
                 while (!IS_HASH(chain_curr));
-
+	    
             if (chain_curr != curr_hash) {
-    		/* re-positioning the thread in next hash level.  the
+    		/* re-positioning the thread in next hash level. the
     		   pointer in the chain of curr_hash will be corrected
     		   by the adjust_chain_nodes procedure */
                 LFHT_AtomicReferenceArray jump_hash =
-                        LFHT_AtomicReferenceArray.class.cast(chain_curr).jumpToPreviousHash(curr_hash, chain_node.hash);
-
+		    LFHT_AtomicReferenceArray.class.cast(chain_curr).jumpToPreviousHash(curr_hash, chain_node.hash);
+		
                 return delete_bucket_chain(jump_hash, chain_node);
             }
-
+	    
             Object chain_prev_valid_candidate = curr_hash;
             int bucket = curr_hash.hashEntry(chain_node.hash);
             chain_curr = curr_hash.hash[bucket];
@@ -800,11 +797,11 @@ public class FFPSHashMap<E, V>  {
             if (IS_HASH(chain_curr)) {
 
                 if((LFHT_AtomicReferenceArray)chain_curr == curr_hash)
-		            /* unable to find chain_node in the chain */
+		    /* unable to find chain_node in the chain */
                     return null;
                 else {
                     LFHT_AtomicReferenceArray jump_hash =
-                            LFHT_AtomicReferenceArray.class.cast(chain_curr).jumpToPreviousHash(
+			LFHT_AtomicReferenceArray.class.cast(chain_curr).jumpToPreviousHash(
                                     curr_hash, chain_node.hash);
 
                     return delete_bucket_chain(jump_hash, chain_node);
@@ -818,14 +815,14 @@ public class FFPSHashMap<E, V>  {
                     if (curr_hash.compareAndSet(bucket,
                             chain_prev_valid_candidate_next,
                             chain_next_valid_candidate)) {
-    			            /* update was ok */
+			/* update was ok */
                         if (!IS_HASH(chain_next_valid_candidate) &&
                                 !IS_VALID_ENTRY((LFHT_AnsNode)chain_next_valid_candidate))
-			                /* restart the process */
+			    /* restart the process */
                             continue;
                         return chain_node;
                     } else /* compareAndSet == false */ {
-    			        /* restart the process */
+			/* restart the process */
                         continue;
                     }
                 } else /* chain_prev_valid_candidate is node */ {
@@ -835,23 +832,23 @@ public class FFPSHashMap<E, V>  {
     			        /* update was ok */
                         if (!IS_HASH(chain_next_valid_candidate) &&
                                 !IS_VALID_ENTRY((LFHT_AnsNode)chain_next_valid_candidate))
-		                    /* restart the process */
+			    /* restart the process */
                             continue;
                         return chain_node;
                     } else /* compareAndSetNext == false */ {
-            			/* restart the process */
+			/* restart the process */
                         continue;
                     }
                 }
             }
         } while(true);
     }
-
+    
     /****************************************************************************
      *                           flush statistics                               *
      *                           (non concurrent)                               *
      ****************************************************************************/
-
+    
     private void flush_bucket_chain(Object chain_node,
                                     int count_nodes,
                                     int level,
@@ -881,8 +878,8 @@ public class FFPSHashMap<E, V>  {
         do {
             if (flush_nodes)
                 System.err.println("\n bkt entry -> " +
-                        bucket_entry + " (level = " +
-                        level + ", entries = " + curr_hash.n_entries + ", pos = " + curr_hash.p_bits + ")");
+				   bucket_entry + " (level = " +
+				   level + ", entries = " + curr_hash.n_entries + ", pos = " + curr_hash.p_bits + ")");
             total_buckets++;
 
             if (!curr_hash.isEmptyBucket(bucket_entry)) {
@@ -1064,7 +1061,7 @@ public class FFPSHashMap<E, V>  {
            of the hash map. properties checked:
              - all paths end in empty buckets or chain nodes. (no situation such as bucket_1->chain->bucket_2 can happen
              - all values are ordered
-     */
+    */
 
     public void flush_hash_statistics2(boolean flush_nodes, boolean flush_summary) {
 
