@@ -21,29 +21,28 @@ public class MultiThreadBenchRunner {
     */
 
     private final static int [] THREADS = {1}; 
-    private final static int RUNS = 1;
+    private final static int RUNS = 0;
     private final static int WARMUP_RUNS = 0;
 
-    private final static int DATASET_SIZE =  100; 
-
+    private final static int DATASET_SIZE =  3000000; 
     
     private final static long DATASET_RANGE = Long.MAX_VALUE;     
 
     private final static double [] DATASET_INSERT_RATIOS = 
-    { 1.00, // 01 - All - Ins
-      0.00, // 02 - All - Look
-      0.00, // 03 - All - Look
-      0.00, // 04 - All - Rem
+    { 1.00, // 01 - All - Ins    (1)
+      0.00, // 02 - All - Look   (3)
+      0.00, // 03 - All - Look   (4)
+      0.00, // 04 - All - Rem    (2)
       
-      0.80, // 05 - Mix - Ins = 0.80  Look (to be found) = 0.05 Look (not to be found) = 0.05  Rem = 0.10
-      0.60, // 06 - Mix - Ins = 0.60  Look (to be found) = 0.15 Look (not to be found) = 0.15  Rem = 0.10
-      0.40, // 07 - Mix - Ins = 0.40  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.10
-      0.20, // 08 - Mix - Ins = 0.20  Look (to be found) = 0.35 Look (not to be found) = 0.35  Rem = 0.10
+      //      0.80, // 05 - Mix - Ins = 0.80  Look (existing items) = 0.05 Look (missing items) = 0.05  Rem = 0.10
+      // 0.60, // 06 - Mix - Ins = 0.60  Look (existing items) = 0.15 Look (missing items) = 0.15  Rem = 0.10
+      //0.40, // 07 - Mix - Ins = 0.40  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.10
+      0.20, // 08 - Mix - Ins = 0.20  Look (existing items) = 0.35 Look (missing items) = 0.35  Rem = 0.10  (6)
       
-      0.50, // 09 - Mix - Ins = 0.50  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.00
-      0.00, // 10 - Mix - Ins = 0.00  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.50
-      0.50, // 11 - Mix - Ins = 0.50  Look (to be found) = 0.00 Look (not to be found) = 0.00  Rem = 0.50
-      0.25, // 12 - Mix - Ins = 0.25  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.25
+      0.50 // 09 - Mix - Ins = 0.50  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.00  (5)
+      //      0.00, // 10 - Mix - Ins = 0.00  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.50
+      //0.50, // 11 - Mix - Ins = 0.50  Look (existing items) = 0.00 Look (missing items) = 0.00  Rem = 0.50
+      //0.25, // 12 - Mix - Ins = 0.25  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.25
     };
     
     private final static double [] DATASET_LOOKUP_FOUND_RATIOS = 
@@ -52,15 +51,15 @@ public class MultiThreadBenchRunner {
       0.50, // 03 - All - Look
       0.00, // 04 - All - Rem
       
-      0.05, // 05 - Mix - Ins = 0.80  Look (to be found) = 0.05 Look (not to be found) = 0.05  Rem = 0.10
-      0.15, // 06 - Mix - Ins = 0.60  Look (to be found) = 0.15 Look (not to be found) = 0.15  Rem = 0.10
-      0.25, // 07 - Mix - Ins = 0.40  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.10
-      0.35, // 08 - Mix - Ins = 0.20  Look (to be found) = 0.35 Look (not to be found) = 0.35  Rem = 0.10
+      //0.05, // 05 - Mix - Ins = 0.80  Look (existing items) = 0.05 Look (missing items) = 0.05  Rem = 0.10
+      //0.15, // 06 - Mix - Ins = 0.60  Look (existing items) = 0.15 Look (missing items) = 0.15  Rem = 0.10
+      //0.25, // 07 - Mix - Ins = 0.40  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.10
+      0.35, // 08 - Mix - Ins = 0.20  Look (existing items) = 0.35 Look (missing items) = 0.35  Rem = 0.10
       
-      0.25, // 09 - Mix - Ins = 0.50  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.00
-      0.25, // 10 - Mix - Ins = 0.00  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.50
-      0.00, // 11 - Mix - Ins = 0.50  Look (to be found) = 0.00 Look (not to be found) = 0.00  Rem = 0.50
-      0.25, // 12 - Mix - Ins = 0.25  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.25			  
+      0.25 // 09 - Mix - Ins = 0.50  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.00
+      //0.25, // 10 - Mix - Ins = 0.00  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.50
+      //0.00, // 11 - Mix - Ins = 0.50  Look (existing items) = 0.00 Look (missing items) = 0.00  Rem = 0.50
+      //0.25, // 12 - Mix - Ins = 0.25  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.25			  
     };
 
     private final static double [] DATASET_LOOKUP_NFOUND_RATIOS = 
@@ -69,15 +68,15 @@ public class MultiThreadBenchRunner {
       0.50, // 03 - All - Look 
       0.00, // 04 - All - Rem
       
-      0.05, // 05 - Mix - Ins = 0.80  Look (to be found) = 0.05 Look (not to be found) = 0.05  Rem = 0.10
-      0.15, // 06 - Mix - Ins = 0.60  Look (to be found) = 0.15 Look (not to be found) = 0.15  Rem = 0.10
-      0.25, // 07 - Mix - Ins = 0.40  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.10
-      0.35, // 08 - Mix - Ins = 0.20  Look (to be found) = 0.35 Look (not to be found) = 0.35  Rem = 0.10
+      //0.05, // 05 - Mix - Ins = 0.80  Look (existing items) = 0.05 Look (missing items) = 0.05  Rem = 0.10
+      //0.15, // 06 - Mix - Ins = 0.60  Look (existing items) = 0.15 Look (missing items) = 0.15  Rem = 0.10
+      //0.25, // 07 - Mix - Ins = 0.40  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.10
+      0.35, // 08 - Mix - Ins = 0.20  Look (existing items) = 0.35 Look (missing items) = 0.35  Rem = 0.10
       
-      0.25, // 09 - Mix - Ins = 0.50  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.00
-      0.25, // 10 - Mix - Ins = 0.00  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.50
-      0.00, // 11 - Mix - Ins = 0.50  Look (to be found) = 0.00 Look (not to be found) = 0.00  Rem = 0.50
-      0.25, // 12 - Mix - Ins = 0.25  Look (to be found) = 0.25 Look (not to be found) = 0.25  Rem = 0.25			  
+      0.25 // 09 - Mix - Ins = 0.50  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.00
+      //0.25, // 10 - Mix - Ins = 0.00  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.50
+      //0.00, // 11 - Mix - Ins = 0.50  Look (existing items) = 0.00 Look (missing items) = 0.00  Rem = 0.50
+      //0.25, // 12 - Mix - Ins = 0.25  Look (existing items) = 0.25 Look (missing items) = 0.25  Rem = 0.25			  
     };
     
     /* CONFIGURATION STUFF - END */
@@ -123,7 +122,7 @@ public class MultiThreadBenchRunner {
 	
 	for (di = 0; di < NR_DATASET_RATIOS; di++) {
 	    System.out.println("--------------------------------------------------------------------------------------------");
-	    System.out.printf("Ratios : Ins = %.2f Look (to be found) = %.2f Look (not to be found) = %.2f Rem = %.2f \n", 
+	    System.out.printf("Ratios : Ins = %.2f Look (existing items) = %.2f Look (missing items) = %.2f Rem = %.2f \n", 
 	        DATASET_INSERT_RATIOS[di], DATASET_LOOKUP_FOUND_RATIOS[di],
 		DATASET_LOOKUP_NFOUND_RATIOS[di],
 	        (1.00 - DATASET_INSERT_RATIOS[di] - DATASET_LOOKUP_FOUND_RATIOS[di] - DATASET_LOOKUP_NFOUND_RATIOS[di]));	    
