@@ -3,6 +3,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import ffpo.*;
+import ffps.*;
 import com.romix.scala.collection.concurrent.TrieMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +30,7 @@ public class MultiThreadInsertLookupRemoveSpeedup {
     public ConcurrentSkipListMap <Long, Long> CSLM = null;
     public Map<Long, Long> CT = null;
     public FFPOHashMap <Long, Long> FFPO = null;
+    public FFPSHashMap <Long, Long> FFPS = null;  
 
     public MultiThreadInsertLookupRemoveSpeedup (int threads[], int r, 
 						 int  w, int d) {
@@ -446,6 +448,109 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 	}
 	return;
     }
+
+
+    /*********************************************************************************
+     *                             FFPS Hash Map                                     *
+     *********************************************************************************/
+    private void ffps(int hashSize) throws InterruptedException {
+	System.out.println("Maps : FFPS" + (1 << hashSize));
+
+	for (final int T : THREADS) {	
+	    long averageTime = 0;
+	    long averageMemory = 0;
+	    final int thread_dataset_offset = DATASET_SIZE / T;
+	    for (int r = 1; r <= TOTAL_RUNS; r++) {		
+		FFPS = new FFPSHashMap<Long, Long>(hashSize);
+		/* save a part of the dataset to the remove operation
+		   items in this part are all different from the remaining items
+		   in the dataset */
+		for (int i = LAST_INSERT_I; i < LAST_LOOKUP_FOUND_I; i++) 
+		    FFPS.put(DATASET[i], DATASET[i]);
+		for (int i = LAST_LOOKUP_NFOUND_I; i < DATASET_SIZE; i++) 
+		    FFPS.put(DATASET[i], DATASET[i]);
+		Thread threads[] = new Thread[T];
+		for (int t = 0; t < T; t++) {
+		    final int tid = t;
+		    /* calculate thread_initial_i -> begin */
+		    int thread_i = tid * thread_dataset_offset;
+		    if (thread_i % T != tid)
+			thread_i = thread_i + (T - (thread_i % T)) + tid;    
+		    final int thread_initial_i;
+		    if (thread_i < DATASET_SIZE)
+			thread_initial_i = thread_i;
+		    else
+			thread_initial_i = tid;
+		    /* calculate thread_initial_i -> end */
+		    threads[t] = new Thread(new Runnable() {
+			    @Override
+			    public void run() {
+				int i = thread_initial_i;
+				if (thread_initial_i < LAST_INSERT_I) { 
+				    for (;i < LAST_INSERT_I; i = i + T) 
+					FFPS.put(DATASET[i], DATASET[i]);		    
+				    for (; i < LAST_LOOKUP_I; i = i + T)
+					FFPS.get(DATASET[i]);				    
+				    for (; i < DATASET_SIZE; i = i + T) 
+					FFPS.remove(DATASET[i]);				    
+				    for (i = tid; i < thread_initial_i; i = i + T) 
+					FFPS.put(DATASET[i], DATASET[i]);
+				} else if (thread_initial_i < LAST_LOOKUP_I) { 
+				    for (; i < LAST_LOOKUP_I; i = i + T)
+					FFPS.get(DATASET[i]);			    
+				    for (; i < DATASET_SIZE; i = i + T) 
+					FFPS.remove(DATASET[i]);				    
+				    for (i = tid; i < LAST_INSERT_I; i = i + T) 
+					FFPS.put(DATASET[i], DATASET[i]);	    
+				    for (; i < thread_initial_i; i = i + T)
+					FFPS.get(DATASET[i]);
+				} else {
+				    for (; i < DATASET_SIZE; i = i + T) 
+					FFPS.remove(DATASET[i]);
+				    for (i = tid; i < LAST_INSERT_I; i = i + T) 
+					FFPS.put(DATASET[i], DATASET[i]); 		    
+				    for (; i < LAST_LOOKUP_I; i = i + T)
+					FFPS.get(DATASET[i]);				    
+				    for (; i < thread_initial_i; i = i + T) 
+					FFPS.remove(DATASET[i]);
+				}				
+			    }
+			});
+		}
+
+		long time = System.nanoTime();
+
+		for (int t = 0; t < T; t++)
+		    threads[t].start();
+
+		for (int t = 0; t < T; t++)
+		    threads[t].join();
+
+		long timeUsed = (System.nanoTime() - time) / 1000000L;
+		if (r > WARMUP_RUNS) {
+		    averageTime += timeUsed;
+		    averageMemory += Runtime.getRuntime().totalMemory() - 
+			             Runtime.getRuntime().freeMemory();
+		}		    
+
+		//if(MAP_SIZE != FFPS.size()) {
+		// System.out.println("ERROR IN MAP SIZE -> "+ MAP_SIZE + " " + FFPS.size());
+		   //System.exit(0);
+		//}
+		//FFPS.flush_hash_statistics(false);
+
+		FFPS = null;
+	    }
+	    
+	    System.out.println("Threads = " + T + " Time = " + 
+			       averageTime / RUNS + " MSeconds" +
+			       " Memory = " + averageMemory / RUNS / 1024 / 1024 + " MBytes");
+	}
+	return;
+    }
+
+
+
     
     public void run(int di, int last_insert_i, int last_lookup_found_i,  int last_lookup_nfound_i,
 		    boolean chm, boolean cslm, boolean ct, boolean ffpo, boolean ffps) 
@@ -464,7 +569,8 @@ public class MultiThreadInsertLookupRemoveSpeedup {
 	    ct();
 	if (ffpo)
 	    ffpo(4);
-	
+	if (ffps)
+	    ffps(4);
 	return;
     }
 }
