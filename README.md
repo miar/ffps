@@ -1,5 +1,13 @@
+<div align="center">
+<img src="./pres.gif" />
+</div>
 
 Lock-Free Fixed Persistent And Sorted Hash Map (FFPS)
+
+The article "On Extending a Fixed Size, Persistent and Lock-Free Hash
+Map Design to Store Sorted Keys" available in
+"http://doi.org/10.1109/ISPA-IUCC-BDCloud-SocialCom-SustainCom.2018.00070"
+has more details about the FFPS model.
 
 Steps to compare Concurrent Hash Maps (CHM), Concurrent Skip Lists
 (CSL), Concurrent Tries (CT) and FFP (O-Original and S-Sorted) models in
